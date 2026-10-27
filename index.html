@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLN and CLT for Penetration Scores</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Penetration scores: Law of Large Numbers and Central Limit Theorem</h1>
+    <p class="lead">
+      <strong>n</strong> systems are attacked in sequence by each of <strong>m</strong> independent attackers.
+      Each attack gives a score <em>X<sub>i</sub></em> (i.i.d.). We study
+      <em>S<sub>n</sub></em> = &Sigma;X<sub>i</sub>, <em>S<sub>n</sub>/n</em> and <em>S<sub>n</sub>/&radic;n</em>.
+    </p>
+  </header>
+
+  <main>
+    <section class="card controls" aria-label="Simulation controls">
+      <div class="field">
+        <label for="p">Bernoulli success probability <em>p</em>: <output id="pOut">0.30</output></label>
+        <input id="p" type="range" min="0.05" max="0.95" step="0.05" value="0.3">
+      </div>
+      <div class="field">
+        <label for="m">Attackers <em>m</em> (trajectories)</label>
+        <select id="m">
+          <option value="100">100</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="5000" selected>5000</option>
+          <option value="10000">10000</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="seed">Random seed</label>
+        <input id="seed" type="number" value="2026" min="1" step="1">
+      </div>
+      <div class="field">
+        <button id="run" type="button">Run simulation</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Model shown in sections 1 and 2">
+        <button role="tab" class="tab active" data-model="bernoulli" aria-selected="true">Bernoulli model {0,1}</button>
+        <button role="tab" class="tab" data-model="rademacher" aria-selected="false">Rademacher model {&minus;1,+1}</button>
+      </div>
+      <p id="modelNote" class="note"></p>
+    </section>
+
+    <section class="card">
+      <h2>1. Sample trajectories</h2>
+      <p class="note">12 attackers. The x-axis is the number of systems attacked so far (log scale). Dashed line = theoretical mean &mu; (for <em>S<sub>k</sub></em>/k).</p>
+      <div class="grid3">
+        <figure><canvas id="trajS" class="chart short"></canvas></figure>
+        <figure><canvas id="trajA" class="chart short"></canvas></figure>
+        <figure><canvas id="trajN" class="chart short"></canvas></figure>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Distributions across the m attackers</h2>
+      <p class="note">Rows: total score, average score, normalized score. Columns: n = 10, 100, 1000, 10000. The red curve is the normal density with the theoretical mean and variance of that quantity.</p>
+      <div id="histGrid" class="grid4"></div>
+    </section>
+
+    <section class="card">
+      <h2>3. Variance and convergence (both models)</h2>
+      <div class="grid3">
+        <figure><canvas id="varChart" class="chart"></canvas></figure>
+        <figure><canvas id="llnChart" class="chart"></canvas></figure>
+        <figure><canvas id="ksChart" class="chart"></canvas></figure>
+      </div>
+      <div class="table-wrap">
+        <table id="statsTable">
+          <caption>Empirical statistics at selected n (theory in brackets)</caption>
+          <thead>
+            <tr>
+              <th>Model</th><th>n</th>
+              <th>Var(S<sub>n</sub>)</th><th>Var(S<sub>n</sub>/n)</th><th>Var(S<sub>n</sub>/&radic;n)</th>
+              <th>P(|S<sub>n</sub>/n&minus;&mu;|&gt;0.05)</th><th>Chebyshev bound</th><th>KS vs N(0,1)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Effect of the number of attackers m</h2>
+      <p class="note">KS distance between the standardized score at n = 1000 and N(0,1), using only the first m' attackers of the current run.</p>
+      <div class="grid2">
+        <figure><canvas id="mChart" class="chart"></canvas></figure>
+        <div id="mTableWrap" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section class="card prose">
+      <h2>5. Interpretation</h2>
+      <ul id="dynamicSummary"></ul>
+      <p><strong>Total score <em>S<sub>n</sub></em>.</strong> E[S<sub>n</sub>] = n&mu; and Var(S<sub>n</sub>) = n&sigma;<sup>2</sup>. Both grow with the number of systems: larger infrastructures give larger absolute differences between lucky and unlucky attackers, of order &radic;n.</p>
+      <p><strong>Average score <em>S<sub>n</sub>/n</em> (LLN).</strong> Var(S<sub>n</sub>/n) = &sigma;<sup>2</sup>/n &rarr; 0, so by Chebyshev P(|S<sub>n</sub>/n &minus; &mu;| &gt; &epsilon;) &le; &sigma;<sup>2</sup>/(n&epsilon;<sup>2</sup>) &rarr; 0: the success rate of every attacker converges in probability to &mu;.</p>
+      <p><strong>Normalized score <em>S<sub>n</sub>/&radic;n</em> (CLT).</strong> Var(S<sub>n</sub>/&radic;n) = &sigma;<sup>2</sup> for every n, the only scaling that keeps the fluctuations neither exploding nor vanishing. In the Rademacher case (&mu; = 0, &sigma; = 1) S<sub>n</sub>/&radic;n converges in distribution to N(0,1); for Bernoulli the same holds after centring, (S<sub>n</sub> &minus; np)/&radic;(np(1&minus;p)).</p>
+      <p><strong>Attackers m.</strong> m does not change the law of one attacker's score. It sets how accurately we observe it (KS error of order 1/&radic;m) and how extreme the best attacker is: the maximum of m roughly standard-normal scores grows like &radic;(2 ln m).</p>
+    </section>
+  </main>
+
+  <footer class="page-footer">Everything runs in your browser: no data leaves this page.</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
